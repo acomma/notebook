@@ -267,7 +267,7 @@ public class ActivationCodeGenerator {
 pip install cryptograph
 ```
 
-生成自签名的证书和私钥 `create_certificate.py`。生成自签名证书主要参考 [Creating a self-signed certificate](https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate)
+生成自签名的证书和私钥 `create_certificate.py`，并使用 PEM 格式保存证书和私钥的内容。生成自签名证书主要参考 [Creating a self-signed certificate](https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate)
 
 ```python
 import datetime
@@ -301,7 +301,7 @@ with open("cert.pem","wb") as f:
     f.write(certificate.public_bytes(encoding=serialization.Encoding.PEM))
 ```
 
-生成激活码和规则 `generate_activation_code.py`
+读取刚才生成的 cert.pem 和 key.pem 文件重建自定义证书和私钥，然后生成激活码和规则 `generate_activation_code.py`
 
 ```python
 import base64
