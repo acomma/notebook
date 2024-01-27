@@ -259,6 +259,21 @@ public class ActivationCodeGenerator {
 
 代码基本都是自解释的，只在必要的地方添加了适当的注释。
 
+`calculateR` 方法可以参考参考资料 5 的进行替代
+
+```java
+private static BigInteger calculateFakeResult(X509Certificate userCertificate) {
+    RSAPublicKey publicKey = (RSAPublicKey) userCertificate.getPublicKey();
+
+    BigInteger x = new BigInteger(1, userCertificate.getSignature());
+    BigInteger r = x.modPow(publicKey.getPublicExponent(), publicKey.getModulus());
+
+    return r;
+}
+```
+
+这样可以避免去操作 ASN1 格式。
+
 ## Python 版本
 
 在 Python 版本中我们使用的 Python 版本是 `3.8.2`，同时使用第三方库 [Cryptography](https://cryptography.io/) 来完成证书和激活码的生成。因此，我们需要安装一下 Cryptography
