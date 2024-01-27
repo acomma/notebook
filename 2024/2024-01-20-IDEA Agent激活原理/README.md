@@ -1,4 +1,4 @@
-转载自 [Idea agent 激活原理](https://linux.do/t/topic/469)，[Github](https://github.com/novice88/jetbra)
+转载自 [Idea agent 激活原理](https://linux.do/t/topic/469)
 
 ## 一 破解原理
 
