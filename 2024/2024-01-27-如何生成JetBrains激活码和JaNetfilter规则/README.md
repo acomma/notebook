@@ -360,6 +360,184 @@ print(f'power_rule:\n{power_rule}')
 
 `fakeResult` 的计算没有采用参考资料 1 或者参考资料 2 中的方式，而是采用了参考资料 5 的方式，避免去操作 ASN1 格式。
 
+## Golang 版本
+
+在 Golang 版本中我们使用的 Golang 版本是 `1.21.6`，Golang 已经自带了证书相关的包不再需要引入第三方包。
+
+下面的 `ca.go` 将生成证书文件 `ca.crt` 和私钥文件 `ca.key`
+
+```golang
+package main
+
+import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"math/big"
+	"os"
+	"time"
+)
+
+func main() {
+	priv, _ := rsa.GenerateKey(rand.Reader, 4096)
+	pub := &priv.PublicKey
+
+	template := &x509.Certificate{
+		Version:               3,
+		SignatureAlgorithm:    x509.SHA256WithRSA,
+		SerialNumber:          big.NewInt(time.Now().Unix()),
+		Subject:               pkix.Name{CommonName: "JetProfile CA"},
+		Issuer:                pkix.Name{CommonName: "JetProfile CA"},
+		NotBefore:             time.Now().Add(-24 * time.Hour),
+		NotAfter:              time.Now().Add(3650 * 24 * time.Hour),
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+	}
+
+	certDER, _ := x509.CreateCertificate(rand.Reader, template, template, pub, priv)
+
+	privPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+
+	_ = os.WriteFile("ca.key", privPEM, 0644)
+	_ = os.WriteFile("ca.crt", certPEM, 0644)
+}
+```
+
+下面的 `code.go` 将生成激活码和 Ja-Netfilter Power 插件的 Result 规则，需要将 `ca.key` 文件的内容赋值给 `privateKeyPEM` 变量，`ca.crt` 文件的内容赋值给 `certPEM` 变量
+
+```golang
+package main
+
+import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha1"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
+	"fmt"
+	"math/big"
+)
+
+func main() {
+	privateKeyPEM := []byte(`-----BEGIN RSA PRIVATE KEY-----
+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
+-----END RSA PRIVATE KEY-----`)
+	block, _ := pem.Decode(privateKeyPEM)
+	privateKey, _ := x509.ParsePKCS1PrivateKey(block.Bytes)
+
+	certPEM := []byte(`-----BEGIN CERTIFICATE-----
+MIIFBTCCAu2gAwIBAgIEZcIcsTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDEw1K
+ZXRQcm9maWxlIENBMB4XDTI0MDIwNTExNDkwNVoXDTM0MDIwMzExNDkwNVowGDEW
+MBQGA1UEAxMNSmV0UHJvZmlsZSBDQTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCC
+AgoCggIBALXcmyymI9kyvbKStLUFbrwKL80/uqoFx3mXLlqOagL1kDRT4lKVY4NJ
+icAsFmtK4qP0DK+4jItHi7L+7EPabWr0U8FQDlBj3YB1QpUKzyd6oH1Ul3vgeMEC
+BC73HaX44xfcq5B7XGUPd5eBKSCL0AMqF2ypIMeGmS4GKH/xthY14Sae+OIvbOII
+PTB8nnqn4YmetsJrS54fqG/royQrucHZuZFX4BTA8Nk83RuVBQcwjL3l97RWAMNy
+m8TIWEsho2fL7HcFQrwvS9t+xmj8zVGkiGtBtkyQYgLp/WCvwxjLQfaL22cPJ8At
+2tGV5i2bNZLcHZkcCn+rumD7f6XSf7ErBQKuTSI01JlubJpm6vrUZ4Mj2+Ws6+k4
+xNNU+vU6jQ2Q9+paHNj3rT+ljdTHJv5k9pRjYontciZ8hXxir22LvDtNmldQs3fw
+VfjH4gzKTtcr+uJNsSdE7DWN0VJ5vc1iVWV3EHkBRVQ/mqTbKkLtx6fjWbUoyD6W
+l42ywqsEXN8p8ZHxdWqaGhQy79OULKdGLSZjuS/6RzHKpBeQ1K6ovgweZKHCjzVu
+5ZX86yOEvRI0xb+T2RuYlZ7G64YKdGkQHUQWLkL5tLl+5XxRymmS1i1SNfZSRvPV
+yhaMUCyf16irwcc7fjqIB7Yw2ePJV0axmhFMggEK9mT5io2h4FOpAgMBAAGjVzBV
+MA4GA1UdDwEB/wQEAwICpDATBgNVHSUEDDAKBggrBgEFBQcDATAPBgNVHRMBAf8E
+BTADAQH/MB0GA1UdDgQWBBQnIRCJ0vq8tRoMhGlosYhGWEJQgzANBgkqhkiG9w0B
+AQsFAAOCAgEAS0YFp58agEPkSE3DtnTqfMvi3y9qp9UTiQLrrFxGb8FbaeCRPA7C
+L/3cAZGB+3+1p5a7LEzEMhZYZWstpLh3IPiaOcOLiMEcqfW8Ht1M22kmTSvOifuv
+XY6q72+iwG+yQUZ0Yri/YUT7KsoSnc6xVD1BtvEcz7zVEq8eQG90VfIKg3GxQZkb
+hgjHq74WiXi3klR9U/EHyeMM7EL9ZhGgrzcEB3G+U0raskDyCCI8fXURz7VkIOsr
+VRs3N5b6coYhlQr+HwxM10MIX/FH2pjKMmqP1vKFuNUhEBov85JA8+DWiGRFlmTw
+0vBsZB2RORhQsC4N1sf/1Q7N1096QAsM/7O/+LvGwFo9jwKp4FymuiWRCNDiPl1/
+lIKCr72vgbtIhR/cAliU7vhOFJtcsFGyWgJc5Jj7Gff2UjB0Lyx1LxkD/+S1x9ug
+2jljmWnAcJ9Y9VzqzghiWaizVT7Og480xNkxSVHVjHA1LE81TIAJ+5wYcaTiD3Et
+oSyDITbuRCOOgaye+68onQNHAt5WmvkOrhB0fWbAq23vXCz9LHyZY0VsyWGvZkka
+vCyQC5XMjbkErsSKD3qFo0t93Uh7BJFBIRSf/wtjdlTSIWjv4lJ8Xup6a7VDLx5d
+QWbDfgHrWJQYRT4iR5Mh5K9Ub8NSJvwIH73MQGuwfgYc1RoDlAsHISs=
+-----END CERTIFICATE-----`)
+	block, _ = pem.Decode(certPEM)
+	certificate, _ := x509.ParseCertificate(block.Bytes)
+
+	licenseId := "29VRVXKXEQ"
+	licensePart := `{"licenseId":"29VRVXKXEQ","licenseeName":"gurgles tumbles","assigneeName":"","assigneeEmail":"","licenseRestriction":"","checkConcurrentUse":false,"products":[{"code":"II","fallbackDate":"2026-09-14","paidUpTo":"2026-09-14","extended":false},{"code":"PCWMP","fallbackDate":"2026-09-14","paidUpTo":"2026-09-14","extended":true},{"code":"PSI","fallbackDate":"2026-09-14","paidUpTo":"2026-09-14","extended":true},{"code":"PDB","fallbackDate":"2026-09-14","paidUpTo":"2026-09-14","extended":true}],"metadata":"0120230914PSAX000005","hash":"TRIAL:1649058719","gracePeriodDays":7,"autoProlongated":false,"isAutoProlongated":false}`
+	licensePartBytes := []byte(licensePart)
+	licensePartBase64 := base64.StdEncoding.EncodeToString(licensePartBytes)
+
+	hashed := sha1.Sum(licensePartBytes)
+	signatureBytes, _ := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA1, hashed[:])
+	signatureBase64 := base64.StdEncoding.EncodeToString(signatureBytes)
+
+	certificateBase64 := base64.StdEncoding.EncodeToString(certificate.Raw)
+
+	code := fmt.Sprintf("%s-%s-%s-%s", licenseId, licensePartBase64, signatureBase64, certificateBase64)
+	fmt.Printf("Code:%s\n", code)
+
+	publicKey := certificate.PublicKey.(*rsa.PublicKey)
+	signature := certificate.Signature
+	x := new(big.Int).SetBytes(signature)
+	r := new(big.Int).Exp(x, big.NewInt(int64(publicKey.E)), publicKey.N)
+
+	rule := fmt.Sprintf("EQUAL,%s,65537,860106576952879101192782278876319243486072481962999610484027161162448933268423045647258145695082284265933019120714643752088997312766689988016808929265129401027490891810902278465065056686129972085119605237470899952751915070244375173428976413406363879128531449407795115913715863867259163957682164040613505040314747660800424242248055421184038777878268502955477482203711835548014501087778959157112423823275878824729132393281517778742463067583320091009916141454657614089600126948087954465055321987012989937065785013284988096504657892738536613208311013047138019418152103262155848541574327484510025594166239784429845180875774012229784878903603491426732347994359380330103328705981064044872334790365894924494923595382470094461546336020961505275530597716457288511366082299255537762891238136381924520749228412559219346777184174219999640906007205260040707839706131662149325151230558316068068139406816080119906833578907759960298749494098180107991752250725928647349597506532778539709852254478061194098069801549845163358315116260915270480057699929968468068015735162890213859113563672040630687357054902747438421559817252127187138838514773245413540030800888215961904267348727206110582505606182944023582459006406137831940959195566364811905585377246353->%s", x, r)
+	fmt.Printf("Rule:%s\n", rule)
+}
+```
+
+需要注意无论是 `licensePart` 变量还是 `fmt.Printf()` 方法不要中英文混合，比如把 `fmt.Printf("Rule:%s\n", rule)` 修改为 `fmt.Printf("规则:%s\n", rule)` 会导致结果不正确。在这里耗费了一些时间！！！
+
 ## 激活码内容获取方式
 
 在 Java 版本或者 Python 版本中我们直接给出了 `licensePart` 的内容。我们可以打开 [https://3.jetbra.in/](https://3.jetbra.in/) 网站，随便进入一个可用的网站，下载 jetbra.zip 并按照文档配置。然后选择你需要的产品的激活码，比如 IntelliJ IDEA
@@ -389,3 +567,4 @@ eyJsaWNlbnNlSWQiOiIyOVZSVlhLWEVRIiwibGljZW5zZWVOYW1lIjoiZ3VyZ2xlcyB0dW1ibGVzIiwi
 3. [[原创]注册码证书验证过程](https://bbs.kanxue.com/thread-271052.htm)
 4. [[讨论] ja-netfilter 代理框架](https://bbs.kanxue.com/thread-271578.htm)
 5. [wmymz / jetbrains_tool](https://gitee.com/qy6174/jetbrains_tool)
+6. [jetbra-server-go 用golang 重复造个轮子吧](https://linux.do/t/topic/9209/23)
