@@ -715,6 +715,17 @@ public class RuleGenerator {
 /Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home/bin/java
 ```
 
+注意 1：`-vm` 配置需要放在配置文件的第一行。
+
+注意 2：在 Windows 中需要去掉配置参数末尾的 `java` 部分，不然会出现一个标题为 DBeaver Ultimate 的命令行窗口，参考 [DBeaverUE激活问题](https://linux.do/t/topic/122164)，举个例子
+
+```text
+-vm
+C:\\Program Files\\Java\\jdk-17\\bin
+```
+
+> 大概原理是如果它能找到 jvm.dll 会用里面的api来创建运行虚拟机。如果直接指定死java则用java命令来启动，就是个黑框。
+
 ### 配置 javaagent
 
 在 `/Applications/DBeaverUltimate.app/Contents/Eclipse/dbeaver.ini` 文件末尾增加如下内容
