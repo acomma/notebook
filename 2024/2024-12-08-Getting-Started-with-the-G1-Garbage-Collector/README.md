@@ -75,7 +75,7 @@ For the sake of security, the Java virtual machine imposes strong syntactic and 
 
 The HotSpot JVM possesses an architecture that supports a strong foundation of features and capabilities and supports the ability to realize high performance and massive scalability. For example, the HotSpot JVM JIT compilers generate dynamic optimizations. In other words, they make optimization decisions while the Java application is running and generate high-performing native machine instructions targeted for the underlying system architecture. In addition, through the maturing evolution and continuous engineering of its runtime environment and multithreaded garbage collector, the HotSpot JVM yields high scalability on even the largest available computer systems.
 
-![](gcslides-Slide1.png)
+![](gcslides-Slide1.PNG)
 
 The main components of the JVM include the class loader, the runtime data areas, and the execution engine.
 
@@ -83,7 +83,7 @@ The main components of the JVM include the class loader, the runtime data areas,
 
 The key components of the JVM that relate to performance are highlighted in the following image.
 
-![](gcslides-Slide2.png)
+![](gcslides-Slide2.PNG)
 
 There are three components of the JVM that are focused on when tuning performance. The heap is where your object data is stored. This area is then managed by the garbage collector selected at startup. Most tuning options relate to sizing the heap and choosing the most appropriate garbage collector for your situation. The JIT compiler also has a big impact on performance but rarely requires tuning with the newer versions of the JVM.
 
@@ -135,7 +135,7 @@ All memory objects end up in one of these three sections.
 
 The G1 collector takes a different approach.
 
-![](slide9.png)
+![](Slide9.PNG)
 
 The heap is partitioned into a set of equal-sized heap regions, each a contiguous range of virtual memory. Certain region sets are assigned the same roles (eden, survivor, old) as in the older collectors, but there is not a fixed size for them. This provides greater flexibility in memory usage.
 
@@ -195,7 +195,7 @@ Next, let's review CMS Collector operations step by step.
 
 The heap is split into three spaces.
 
-![](slide1.png)
+![](Sslide1.PNG)
 
 Young generation is split into Eden and two survivor spaces. Old generation is one contiguous space. Object collection is done in place. No compaction is done unless there is a full GC.
 
@@ -203,7 +203,7 @@ Young generation is split into Eden and two survivor spaces. Old generation is o
 
 The young generation is colored light green and the old generation in blue. This is what the CMS might look like if your application has been running for a while. Objects are scattered around the old generation area.
 
-![](slide2.png)
+![](Slide2.PNG)
 
 With CMS, old generation objects are deallocated in place. They are not moved around. The space is not compacted unless there is a full GC.
 
@@ -211,13 +211,13 @@ With CMS, old generation objects are deallocated in place. They are not moved ar
 
 Live objects are copied from the Eden space and survivor space to the other survivor space. Any older objects that have reached their aging threshold are promoted to old generation.
 
-![](slide3.png)
+![](Slide3.PNG)
 
 **4. After Young GC**
 
 After a young GC, the Eden space is cleared and one of the survivor spaces is cleared.
 
-![](slide4.png)
+![](Slide4.PNG)
 
 Newly promoted objects are shown in dark blue on the diagram. The green objects are surviving young generation objects that have not yet been promoted to old generation.
 
@@ -225,7 +225,7 @@ Newly promoted objects are shown in dark blue on the diagram. The green objects 
 
 Two stop the world events take place: initial mark and remark. When the old generation reaches a certain occupancy rate, the CMS is kicked off.
 
-![](slide5.png)
+![](Slide5.PNG)
 
 (1) Initial mark is a short pause phase where live (reachable) objects are marked. (2) Concurrent marking finds live objects while the application continues to execute. Finally, in the (3) remark phase, objects are found that were missed during (2) concurrent marking in the previous phase.
 
@@ -233,7 +233,7 @@ Two stop the world events take place: initial mark and remark. When the old gene
 
 Objects that were not marked in the previous phase are deallocated in place. There is no compaction.
 
-![](slide6.png)
+![](Slide6.PNG)
 
 **Note:** Unmarked objects == Dead Objects
 
@@ -241,7 +241,7 @@ Objects that were not marked in the previous phase are deallocated in place. The
 
 After the (4) Sweeping phase, you can see that a lot of memory has been freed up. You will also notice that no compaction has been done.
 
-![](slide7.png)
+![](Slide7.PNG)
 
 Finally, the CMS collector will move through the (5) resetting phase and wait for the next time the GC threshold is reached.
 
@@ -255,7 +255,7 @@ The G1 collector takes a different approach to allocating the heap. The pictures
 
 The heap is one memory area split into many fixed sized regions.
 
-![](slide8.png)
+![](Slide8.PNG)
 
 Region size is chosen by the JVM at startup. The JVM generally targets around 2000 regions varying in size from 1 to 32Mb.
 
@@ -263,7 +263,7 @@ Region size is chosen by the JVM at startup. The JVM generally targets around 20
 
 In reality, these regions are mapped into logical representations of Eden, Survivor, and old generation spaces.
 
-![](slide9.png)
+![](Slide9.PNG)
 
 The colors in the picture shows which region is associated with which role. Live objects are evacuated (i.e., copied or moved) from one region to another. Regions are designed to be collected in parallel with or without stopping all other application threads.
 
@@ -275,7 +275,7 @@ As shown regions can be allocated into Eden, survivor, and old generation region
 
 The heap is split into approximately 2000 regions. Minimum size is 1Mb and maximum size is 32Mb. Blue regions hold old generation objects and green regions hold young generation objects.
 
-![](slide10.png)
+![](Slide10.PNG)
 
 Note that the regions are not required to be contiguous like the older garbage collectors.
 
@@ -283,7 +283,7 @@ Note that the regions are not required to be contiguous like the older garbage c
 
 Live objects are evacuated (i.e., copied or moved) to one or more survivor regions. If the aging threshold is met, some of the objects are promoted to old generation regions.
 
-![](slide11.png)
+![](Slide11.PNG)
 
 This is a stop the world (STW) pause. Eden size and survivor size is calculated for the next young GC. Accounting information is kept to help calculate the size. Things like the pause time goal are taken into consideration.
 
@@ -293,7 +293,7 @@ This approach makes it very easy to resize regions, making them bigger or smalle
 
 Live objects have been evacuated to survivor regions or to old generation regions.
 
-![](slide12.png)
+![](Slide12.PNG)
 
 Recently promoted objects are shown in dark blue. Survivor regions in green.
 
@@ -330,31 +330,31 @@ With the phases defined, let's look at how they interact with the old generation
 
 Initial marking of live object is piggybacked on a young generation garbage collection. In the logs this is noted as `GC pause (young)(inital-mark)`.
 
-![](slide13.png)
+![](Slide13.PNG)
 
 **7. Concurrent Marking Phase**
 
 If empty regions are found (as denoted by the "X"), they are removed immediately in the Remark phase. Also, "accounting" information that determines liveness is calculated.
 
-![](slide14.png)
+![](Slide14.PNG)
 
 **8. Remark Phase**
 
 Empty regions are removed and reclaimed. Region liveness is now calculated for all regions.
 
-![](slide15.png)
+![](Slide15.PNG)
 
 **9. Copying/Cleanup Phase**
 
 G1 selects the regions with the lowest "liveness", those regions which can be collected the fastest. Then those regions are collected at the same time as a young GC. This is denoted in the logs as [GC pause (mixed)]. So both young and old generations are collected at the same time.
 
-![](slide16.png)
+![](Slide16.PNG)
 
 **10. After Copying/Cleanup Phase**
 
 The regions selected have been collected and compacted into the dark blue region and the dark green region shown in the diagram.
 
-![](slide17.png)
+![](Slide17.PNG)
 
 #### Summary of Old Generation GC
 

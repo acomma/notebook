@@ -74,7 +74,7 @@ For the sake of security, the Java virtual machine imposes strong syntactic and 
 
 The HotSpot JVM possesses an architecture that supports a strong foundation of features and capabilities and supports the ability to realize high performance and massive scalability. For example, the HotSpot JVM JIT compilers generate dynamic optimizations. In other words, they make optimization decisions while the Java application is running and generate high-performing native machine instructions targeted for the underlying system architecture. In addition, through the maturing evolution and continuous engineering of its runtime environment and multithreaded garbage collector, the HotSpot JVM yields high scalability on even the largest available computer systems.
 
-![](Slide1.png)
+![](Slide1.PNG)
 
 The main components of the JVM include the classloader, the runtime data areas, and the execution engine.
 
@@ -82,7 +82,7 @@ The main components of the JVM include the classloader, the runtime data areas, 
 
 The key components of the JVM that relate to performance are highlighted in the following image.
 
-![](Slide2.png)
+![](Slide2.PNG)
 
 There are three components of the JVM that are focused on when tuning performance. The heap is where your object data is stored. This area is then managed by the garbage collector selected at startup. Most tuning options relate to sizing the heap and choosing the most appropriate garbage collector for your situation. The JIT compiler also has a big impact on performance but rarely requires tuning with the newer versions of the JVM.
  
@@ -122,7 +122,7 @@ In a programming language like C, allocating and deallocating memory is a manual
 
 The first step in the process is called marking. This is where the garbage collector identifies which pieces of memory are in use and which are not.
 
-![](Slide3.png)
+![](Slide3.PNG)
 
 Referenced objects are shown in blue. Unreferenced objects are shown in gold. All objects are scanned in the marking phase to make this determination. This can be a very time consuming process if all objects in a system must be scanned.
 
@@ -130,7 +130,7 @@ Referenced objects are shown in blue. Unreferenced objects are shown in gold. Al
 
 Normal deletion removes unreferenced objects leaving referenced objects and pointers to free space.
 
-![](Slide1b.png)
+![](Slide1b.PNG)
 
 The memory allocator holds references to blocks of free space where new object can be allocated.
 
@@ -138,7 +138,7 @@ The memory allocator holds references to blocks of free space where new object c
 
 To further improve performance, in addition to deleting unreferenced objects, you can also compact the remaining referenced objects. By moving referenced object together, this makes new memory allocation much easier and faster.
 
-![](Slide4.png)
+![](Slide4.PNG)
 
 #### Why Generational Garbage Collection?
 
@@ -154,7 +154,7 @@ As you can see, fewer and fewer objects remain allocated over time. In fact most
 
 The information learned from the object allocation behavior can be used to enhance the performance of the JVM. Therefore, the heap is broken up into smaller parts or generations. The heap parts are: Young Generation, Old or Tenured Generation, and Permanent Generation
 
-![](Slide5.png)
+![](Slide5.PNG)
 
 The **Young Generation** is where all new objects are allocated and aged. When the young generation fills up, this causes a ***minor garbage collection***. Minor collections can be optimized assuming a high object mortality rate. A young generation full of dead objects is collected very quickly. Some surviving objects are aged and eventually move to the old generation.
 
@@ -176,35 +176,35 @@ Now that you understand why the heap is separted into different generations, it 
 
 **1.** First, any new objects are allocated to the eden space. Both survivor spaces start out empty.
 
-![](Slide13.png)
+![](Slide13.PNG)
 
 **2.** When the eden space fills up, a minor garbage collection is triggered.
 
-![](Slide14.png)
+![](Slide14.PNG)
 
 **3.** Referenced objects are moved to the first survivor space. Unreferenced objects are deleted when the eden space is cleared.
 
-![](Slide6.png)
+![](Slide6.PNG)
 
 **4.** At the next minor GC, the same thing happens for the eden space. Unreferenced objects are deleted and referenced objects are moved to a survivor space. However, in this case, they are moved to the second survivor space (S1). In addition, objects from the last minor GC on the first survivor space (S0) have their age incremented and get moved to S1. Once all surviving objects have been moved to S1, both S0 and eden are cleared. Notice we now have differently aged object in the survivor space.
 
-![](Slide8.png)
+![](Slide8.PNG)
 
 **5.** At the next minor GC, the same process repeats. However this time the survivor spaces switch. Referenced objects are moved to S0. Surviving objects are aged. Eden and S1 are cleared.
 
-![](Slide9.png)
+![](Slide9.PNG)
 
 **6.** This slide demonstrates promotion. After a minor GC, when aged objects reach a certain age threshold (8 in this example) they are promoted from young generation to old generation.
 
-![](Slide7.png)
+![](Slide7.PNG)
 
 **7.** As minor GCs continue to occure objects will continue to be promoted to the old generation space.
 
-![](Slide10.png)
+![](Slide10.PNG)
 
 **8.** So that pretty much covers the entire process with the young generation. Eventually, a major GC will be performed on the old generation which cleans up and compacts that space.
 
-![](Slide11.png)
+![](Slide11.PNG)
 
 ## Performing Your Own Observations
 
