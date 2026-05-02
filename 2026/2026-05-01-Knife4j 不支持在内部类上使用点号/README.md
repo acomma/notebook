@@ -96,4 +96,4 @@ public class Outer {
 }
 ```
 
-这与 `springfox-swagger2` 无关，使用 `io.springfox:springfox-swagger2:2.9.2` 和 `io.springfox:springfox-swagger-ui:2.9.2` 测试时无论 `.` 还是 `$` 都是正常的。测试发现除 `.` 以外其他字符也都是正常的，所有这应该是 Knife4j 的问题。还不知道是什么原因引起的。
+这与 `springfox-swagger2` 无关，使用 `io.springfox:springfox-swagger2:2.10.5` 和 `io.springfox:springfox-swagger-ui:2.10.5` 测试时无论 `.` 还是 `$` 都是正常的。测试发现除 `.` 以外其他字符也都是正常的，所有这应该是 Knife4j 的问题。还不知道是什么原因引起的。
